@@ -346,7 +346,7 @@
     </div>
     
     <script>
-        // Hi Eike! 👋 Schön, dass du den Code anschaust!
+        // Hi Eike!
         let csvData = [];
         let headers = [];
         let transformedData = [];
@@ -505,6 +505,36 @@
                 'Col7': '',
                 'Sum': sumCol ? row[sumCol] : ''
             }));
+
+            // Sort by date (earliest to latest)
+            if (dateCol) {
+                transformedData.sort((a, b) => {
+                    const dateA = parseDate(a.Date);
+                    const dateB = parseDate(b.Date);
+                    return dateA - dateB;
+                });
+            }
+        }
+
+        function parseDate(dateStr) {
+            if (!dateStr) return new Date(0);
+
+            // Try common date formats
+            // DD.MM.YYYY or DD/MM/YYYY
+            let parts = dateStr.split(/[.\-\/]/);
+            if (parts.length === 3) {
+                // Assume European format DD.MM.YYYY
+                const day = parseInt(parts[0]);
+                const month = parseInt(parts[1]) - 1;
+                const year = parseInt(parts[2]);
+                if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+                    return new Date(year, month, day);
+                }
+            }
+
+            // Try parsing as ISO or other standard formats
+            const date = new Date(dateStr);
+            return isNaN(date.getTime()) ? new Date(0) : date;
         }
         
         function parseCSV(text) {

@@ -539,9 +539,9 @@
             thead.appendChild(headerRow);
             previewTable.appendChild(thead);
 
-            // Body (nur erste 10 Zeilen)
+            // Body (alle Zeilen)
             const tbody = document.createElement('tbody');
-            const previewData = displayData.slice(0, 10);
+            const previewData = displayData;
 
             previewData.forEach(row => {
                 const tr = document.createElement('tr');

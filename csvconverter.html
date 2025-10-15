@@ -255,6 +255,27 @@
             background: #ccc;
             cursor: not-allowed;
         }
+
+        .delete-btn {
+            background: #ef4444;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+            transition: background 0.3s;
+        }
+
+        .delete-btn:hover {
+            background: #dc2626;
+        }
+
+        select:disabled, input[type="checkbox"]:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -267,6 +288,9 @@
             <input type="file" id="fileInput" accept=".csv" />
             <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
                 Datei auswählen
+            </button>
+            <button class="delete-btn hidden" id="deleteDataBtn" style="margin-left: 10px;">
+                🗑️ Daten löschen
             </button>
         </div>
         
@@ -363,7 +387,34 @@
         const downloadBtn = document.getElementById('downloadBtn');
         const copyBtn = document.getElementById('copyBtn');
         const resetOrderBtn = document.getElementById('resetOrderBtn');
-        
+        const deleteDataBtn = document.getElementById('deleteDataBtn');
+        const delimiterSelect = document.getElementById('delimiter');
+        const hasHeaderCheckbox = document.getElementById('hasHeader');
+
+        // Delete data button
+        deleteDataBtn.addEventListener('click', () => {
+            if (confirm('Möchten Sie wirklich alle Daten löschen und neu beginnen?')) {
+                // Reset all data
+                csvData = [];
+                headers = [];
+                transformedData = [];
+                columnOrder = [...defaultColumnOrder];
+
+                // Reset file input
+                fileInput.value = '';
+
+                // Hide sections
+                mappingSection.classList.add('hidden');
+                columnOrderSection.classList.add('hidden');
+                previewSection.classList.add('hidden');
+                deleteDataBtn.classList.add('hidden');
+
+                // Unlock format options
+                delimiterSelect.disabled = false;
+                hasHeaderCheckbox.disabled = false;
+            }
+        });
+
         // Drag & Drop Funktionalität
         uploadSection.addEventListener('dragover', (e) => {
             e.preventDefault();
@@ -434,6 +485,13 @@
                 transformData();
                 updatePreview();
                 previewSection.classList.remove('hidden');
+
+                // Lock format options after upload
+                delimiterSelect.disabled = true;
+                hasHeaderCheckbox.disabled = true;
+
+                // Show delete button
+                deleteDataBtn.classList.remove('hidden');
             };
 
             reader.readAsText(file);

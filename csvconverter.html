@@ -213,6 +213,48 @@
             gap: 10px;
             margin-top: 20px;
         }
+
+        .column-order-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 15px;
+        }
+
+        .column-order-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 8px;
+        }
+
+        .column-order-item span {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .reorder-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+
+        .reorder-btn:hover {
+            background: #764ba2;
+        }
+
+        .reorder-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -276,7 +318,13 @@
                 </div>
             </div>
         </div>
-        
+
+        <div class="options-section hidden" id="columnOrderSection">
+            <h3>📐 Spalten-Reihenfolge</h3>
+            <p class="info-text">Ändern Sie die Reihenfolge der Ausgabe-Spalten:</p>
+            <ul class="column-order-list" id="columnOrderList"></ul>
+        </div>
+
         <div class="preview-section hidden" id="previewSection">
             <h3>👁️ Vorschau</h3>
             <div class="table-container">
@@ -298,11 +346,14 @@
         let csvData = [];
         let headers = [];
         let transformedData = [];
+        let columnOrder = ['Col1', 'Col2', 'Date', 'Col4', 'Empfänger', 'Col6', 'Col7', 'Sum'];
 
         const fileInput = document.getElementById('fileInput');
         const uploadSection = document.getElementById('uploadSection');
         const previewSection = document.getElementById('previewSection');
         const mappingSection = document.getElementById('mappingSection');
+        const columnOrderSection = document.getElementById('columnOrderSection');
+        const columnOrderList = document.getElementById('columnOrderList');
         const previewTable = document.getElementById('previewTable');
         const downloadBtn = document.getElementById('downloadBtn');
         const copyBtn = document.getElementById('copyBtn');
@@ -364,6 +415,8 @@
                 parseCSV(text);
                 populateMappingDropdowns();
                 mappingSection.classList.remove('hidden');
+                populateColumnOrderList();
+                columnOrderSection.classList.remove('hidden');
                 transformData();
                 updatePreview();
                 previewSection.classList.remove('hidden');
@@ -372,18 +425,53 @@
             reader.readAsText(file);
         }
 
+        function populateColumnOrderList() {
+            columnOrderList.innerHTML = '';
+
+            columnOrder.forEach((col, index) => {
+                const li = document.createElement('li');
+                li.className = 'column-order-item';
+                li.innerHTML = `
+                    <span>${col}</span>
+                    <button class="reorder-btn" onclick="moveColumn(${index}, -1)" ${index === 0 ? 'disabled' : ''}>↑</button>
+                    <button class="reorder-btn" onclick="moveColumn(${index}, 1)" ${index === columnOrder.length - 1 ? 'disabled' : ''}>↓</button>
+                `;
+                columnOrderList.appendChild(li);
+            });
+        }
+
+        function moveColumn(index, direction) {
+            const newIndex = index + direction;
+
+            if (newIndex < 0 || newIndex >= columnOrder.length) return;
+
+            // Swap columns
+            const temp = columnOrder[index];
+            columnOrder[index] = columnOrder[newIndex];
+            columnOrder[newIndex] = temp;
+
+            // Update UI
+            populateColumnOrderList();
+            transformData();
+            updatePreview();
+        }
+
         function populateMappingDropdowns() {
             const mappingSelects = ['mapDate', 'mapEmpfaenger', 'mapSum'];
+
+            console.log('Headers found:', headers);
+            console.log('Number of headers:', headers.length);
 
             mappingSelects.forEach(selectId => {
                 const select = document.getElementById(selectId);
                 select.innerHTML = '<option value="">-- Spalte wählen --</option>';
 
-                headers.forEach(header => {
+                headers.forEach((header, index) => {
                     const option = document.createElement('option');
                     option.value = header;
                     option.textContent = header;
                     select.appendChild(option);
+                    console.log(`Added option ${index}: "${header}"`);
                 });
             });
         }
@@ -397,9 +485,10 @@
                 'Col1': '',
                 'Col2': '',
                 'Date': dateCol ? row[dateCol] : '',
+                'Col4': '',
                 'Empfänger': empfaengerCol ? row[empfaengerCol] : '',
-                'Col5': '',
                 'Col6': '',
+                'Col7': '',
                 'Sum': sumCol ? row[sumCol] : ''
             }));
         }
@@ -436,7 +525,7 @@
         function updatePreview() {
             previewTable.innerHTML = '';
 
-            const displayHeaders = ['Col1', 'Col2', 'Date', 'Empfänger', 'Col5', 'Col6', 'Sum'];
+            const displayHeaders = columnOrder;
             const displayData = transformedData.length ? transformedData : csvData;
 
             // Header
@@ -469,7 +558,7 @@
         
         copyBtn.addEventListener('click', async () => {
             const data = transformedData.length ? transformedData : csvData;
-            const fixedHeaders = ['Col1', 'Col2', 'Date', 'Empfänger', 'Col5', 'Col6', 'Sum'];
+            const fixedHeaders = columnOrder;
 
             // Create tab-separated text for Excel
             const rows = [fixedHeaders.join('\t')];
@@ -494,7 +583,7 @@
 
         downloadBtn.addEventListener('click', () => {
             const data = transformedData.length ? transformedData : csvData;
-            const fixedHeaders = ['Col1', 'Col2', 'Date', 'Empfänger', 'Col5', 'Col6', 'Sum'];
+            const fixedHeaders = columnOrder;
 
             // Always export as CSV with the fixed structure
             const rows = [fixedHeaders.join(',')];

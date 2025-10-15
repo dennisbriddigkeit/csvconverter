@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Format Converter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .upload-section {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            background: #f8f9ff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .upload-section:hover {
+            background: #eef1ff;
+            border-color: #764ba2;
+        }
+        
+        .upload-section.dragover {
+            background: #e0e7ff;
+            border-color: #4c51bf;
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .upload-btn {
+            background: #667eea;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        
+        .upload-btn:hover {
+            background: #764ba2;
+        }
+        
+        .options-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .option-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        select, input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        select:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .preview-section {
+            margin-top: 30px;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+        
+        tr:hover {
+            background: #f8f9ff;
+        }
+        
+        .download-btn {
+            background: #10b981;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+            transition: background 0.3s;
+        }
+        
+        .download-btn:hover {
+            background: #059669;
+        }
+        
+        .info-text {
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        
+        .mapping-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+
+        .mapping-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .mapping-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .mapping-field label {
+            font-size: 14px;
+            margin-bottom: 5px;
+            color: #667eea;
+            font-weight: 700;
+        }
+
+        .copy-btn {
+            background: #f59e0b;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+            margin-left: 10px;
+            transition: background 0.3s;
+        }
+
+        .copy-btn:hover {
+            background: #d97706;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 CSV Format Converter</h1>
+        
+        <div class="upload-section" id="uploadSection">
+            <h2>📁 CSV-Datei hochladen</h2>
+            <p class="info-text">Klicke hier oder ziehe eine CSV-Datei hierher</p>
+            <input type="file" id="fileInput" accept=".csv" />
+            <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                Datei auswählen
+            </button>
+        </div>
+        
+        <div class="options-section" id="optionsSection">
+            <h3>⚙️ Format-Optionen</h3>
+
+            <div class="option-group">
+                <label for="delimiter">Trennzeichen im Original:</label>
+                <select id="delimiter">
+                    <option value=",">Komma (,)</option>
+                    <option value=";">Semikolon (;)</option>
+                    <option value="\t">Tab</option>
+                    <option value="|">Pipe (|)</option>
+                </select>
+            </div>
+
+            <div class="option-group">
+                <label>
+                    <input type="checkbox" id="hasHeader" checked>
+                    Erste Zeile enthält Spaltenüberschriften
+                </label>
+            </div>
+        </div>
+
+        <div class="options-section hidden" id="mappingSection">
+            <h3>🗂️ Spalten-Zuordnung</h3>
+            <p class="info-text">Ordnen Sie die Bankauszug-Spalten der Zielstruktur zu:</p>
+
+            <div class="mapping-container">
+                <div class="mapping-field">
+                    <label for="mapDate">Datum (Date):</label>
+                    <select id="mapDate">
+                        <option value="">-- Spalte wählen --</option>
+                    </select>
+                </div>
+
+                <div class="mapping-field">
+                    <label for="mapEmpfaenger">Empfänger:</label>
+                    <select id="mapEmpfaenger">
+                        <option value="">-- Spalte wählen --</option>
+                    </select>
+                </div>
+
+                <div class="mapping-field">
+                    <label for="mapSum">Betrag (Sum):</label>
+                    <select id="mapSum">
+                        <option value="">-- Spalte wählen --</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="preview-section hidden" id="previewSection">
+            <h3>👁️ Vorschau</h3>
+            <div class="table-container">
+                <table id="previewTable"></table>
+            </div>
+            
+            <div class="button-group">
+                <button class="copy-btn" id="copyBtn">
+                    📋 In Zwischenablage kopieren
+                </button>
+                <button class="download-btn" id="downloadBtn">
+                    ⬇️ Als Datei herunterladen
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let csvData = [];
+        let headers = [];
+        let transformedData = [];
+
+        const fileInput = document.getElementById('fileInput');
+        const uploadSection = document.getElementById('uploadSection');
+        const previewSection = document.getElementById('previewSection');
+        const mappingSection = document.getElementById('mappingSection');
+        const previewTable = document.getElementById('previewTable');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        
+        // Drag & Drop Funktionalität
+        uploadSection.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadSection.classList.add('dragover');
+        });
+        
+        uploadSection.addEventListener('dragleave', () => {
+            uploadSection.classList.remove('dragover');
+        });
+        
+        uploadSection.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadSection.classList.remove('dragover');
+            
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                handleFile(e.target.files[0]);
+            }
+        });
+        
+        // Optionen ändern -> Vorschau aktualisieren
+        document.getElementById('delimiter').addEventListener('change', () => {
+            if (fileInput.files.length) {
+                handleFile(fileInput.files[0]);
+            }
+        });
+        
+        document.getElementById('hasHeader').addEventListener('change', () => {
+            if (csvData.length) {
+                updatePreview();
+            }
+        });
+
+        // Mapping change listeners
+        ['mapDate', 'mapEmpfaenger', 'mapSum'].forEach(id => {
+            document.getElementById(id).addEventListener('change', () => {
+                if (csvData.length) {
+                    transformData();
+                    updatePreview();
+                }
+            });
+        });
+        
+        function handleFile(file) {
+            const reader = new FileReader();
+            
+            reader.onload = (e) => {
+                const text = e.target.result;
+                parseCSV(text);
+                populateMappingDropdowns();
+                mappingSection.classList.remove('hidden');
+                transformData();
+                updatePreview();
+                previewSection.classList.remove('hidden');
+            };
+
+            reader.readAsText(file);
+        }
+
+        function populateMappingDropdowns() {
+            const mappingSelects = ['mapDate', 'mapEmpfaenger', 'mapSum'];
+
+            mappingSelects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                select.innerHTML = '<option value="">-- Spalte wählen --</option>';
+
+                headers.forEach(header => {
+                    const option = document.createElement('option');
+                    option.value = header;
+                    option.textContent = header;
+                    select.appendChild(option);
+                });
+            });
+        }
+
+        function transformData() {
+            const dateCol = document.getElementById('mapDate').value;
+            const empfaengerCol = document.getElementById('mapEmpfaenger').value;
+            const sumCol = document.getElementById('mapSum').value;
+
+            transformedData = csvData.map(row => ({
+                'Col1': '',
+                'Col2': '',
+                'Date': dateCol ? row[dateCol] : '',
+                'Empfänger': empfaengerCol ? row[empfaengerCol] : '',
+                'Col5': '',
+                'Col6': '',
+                'Sum': sumCol ? row[sumCol] : ''
+            }));
+        }
+        
+        function parseCSV(text) {
+            const delimiter = document.getElementById('delimiter').value;
+            const hasHeader = document.getElementById('hasHeader').checked;
+            
+            const lines = text.split('\n').filter(line => line.trim());
+            
+            if (hasHeader && lines.length > 0) {
+                headers = lines[0].split(delimiter).map(h => h.trim());
+                csvData = lines.slice(1).map(line => {
+                    const values = line.split(delimiter).map(v => v.trim());
+                    const obj = {};
+                    headers.forEach((header, i) => {
+                        obj[header] = values[i] || '';
+                    });
+                    return obj;
+                });
+            } else {
+                headers = lines[0].split(delimiter).map((_, i) => `Spalte ${i + 1}`);
+                csvData = lines.map(line => {
+                    const values = line.split(delimiter).map(v => v.trim());
+                    const obj = {};
+                    headers.forEach((header, i) => {
+                        obj[header] = values[i] || '';
+                    });
+                    return obj;
+                });
+            }
+        }
+        
+        function updatePreview() {
+            previewTable.innerHTML = '';
+
+            const displayHeaders = ['Col1', 'Col2', 'Date', 'Empfänger', 'Col5', 'Col6', 'Sum'];
+            const displayData = transformedData.length ? transformedData : csvData;
+
+            // Header
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            displayHeaders.forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header;
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            previewTable.appendChild(thead);
+
+            // Body (nur erste 10 Zeilen)
+            const tbody = document.createElement('tbody');
+            const previewData = displayData.slice(0, 10);
+
+            previewData.forEach(row => {
+                const tr = document.createElement('tr');
+                displayHeaders.forEach(header => {
+                    const td = document.createElement('td');
+                    td.textContent = row[header] || '';
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+
+            previewTable.appendChild(tbody);
+        }
+        
+        copyBtn.addEventListener('click', async () => {
+            const data = transformedData.length ? transformedData : csvData;
+            const fixedHeaders = ['Col1', 'Col2', 'Date', 'Empfänger', 'Col5', 'Col6', 'Sum'];
+
+            // Create tab-separated text for Excel
+            const rows = [fixedHeaders.join('\t')];
+
+            data.forEach(row => {
+                const values = fixedHeaders.map(header => row[header] || '');
+                rows.push(values.join('\t'));
+            });
+
+            const textToCopy = rows.join('\n');
+
+            try {
+                await navigator.clipboard.writeText(textToCopy);
+                copyBtn.textContent = '✅ Kopiert!';
+                setTimeout(() => {
+                    copyBtn.textContent = '📋 In Zwischenablage kopieren';
+                }, 2000);
+            } catch (err) {
+                alert('Fehler beim Kopieren: ' + err);
+            }
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            const data = transformedData.length ? transformedData : csvData;
+            const fixedHeaders = ['Col1', 'Col2', 'Date', 'Empfänger', 'Col5', 'Col6', 'Sum'];
+
+            // Always export as CSV with the fixed structure
+            const rows = [fixedHeaders.join(',')];
+
+            data.forEach(row => {
+                const values = fixedHeaders.map(header => {
+                    let value = row[header] || '';
+                    // Wenn Wert Komma enthält, in Anführungszeichen setzen
+                    if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+                        value = '"' + value.replace(/"/g, '""') + '"';
+                    }
+                    return value;
+                });
+                rows.push(values.join(','));
+            });
+
+            const content = rows.join('\n');
+            downloadFile(content, 'converted_data.csv', 'text/csv');
+        });
+        
+        function convertToCSV(delimiter) {
+            const rows = [headers.join(delimiter)];
+            
+            csvData.forEach(row => {
+                const values = headers.map(header => {
+                    let value = row[header] || '';
+                    // Wenn Wert Trennzeichen enthält, in Anführungszeichen setzen
+                    if (value.includes(delimiter) || value.includes('"') || value.includes('\n')) {
+                        value = '"' + value.replace(/"/g, '""') + '"';
+                    }
+                    return value;
+                });
+                rows.push(values.join(delimiter));
+            });
+            
+            return rows.join('\n');
+        }
+        
+        function convertToTSV() {
+            return convertToCSV('\t');
+        }
+        
+        function downloadFile(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>

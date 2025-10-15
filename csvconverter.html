@@ -323,6 +323,9 @@
             <h3>📐 Spalten-Reihenfolge</h3>
             <p class="info-text">Ändern Sie die Reihenfolge der Ausgabe-Spalten:</p>
             <ul class="column-order-list" id="columnOrderList"></ul>
+            <button class="upload-btn" id="resetOrderBtn" style="margin-top: 10px;">
+                🔄 Standardreihenfolge wiederherstellen
+            </button>
         </div>
 
         <div class="preview-section hidden" id="previewSection">
@@ -346,7 +349,8 @@
         let csvData = [];
         let headers = [];
         let transformedData = [];
-        let columnOrder = ['Col1', 'Col2', 'Date', 'Col4', 'Empfänger', 'Col6', 'Col7', 'Sum'];
+        const defaultColumnOrder = ['Col1', 'Col2', 'Date', 'Col4', 'Empfänger', 'Col6', 'Col7', 'Sum'];
+        let columnOrder = [...defaultColumnOrder];
 
         const fileInput = document.getElementById('fileInput');
         const uploadSection = document.getElementById('uploadSection');
@@ -357,6 +361,7 @@
         const previewTable = document.getElementById('previewTable');
         const downloadBtn = document.getElementById('downloadBtn');
         const copyBtn = document.getElementById('copyBtn');
+        const resetOrderBtn = document.getElementById('resetOrderBtn');
         
         // Drag & Drop Funktionalität
         uploadSection.addEventListener('dragover', (e) => {
@@ -405,6 +410,14 @@
                     updatePreview();
                 }
             });
+        });
+
+        // Reset column order button
+        resetOrderBtn.addEventListener('click', () => {
+            columnOrder = [...defaultColumnOrder];
+            populateColumnOrderList();
+            transformData();
+            updatePreview();
         });
         
         function handleFile(file) {
